@@ -1,0 +1,26 @@
+{
+  "name": "apotd",
+  "description": "Download today's Astronomy Picture of the Day",
+  "version": "0.1",
+  "perl": "6.d",
+  "authors": [
+    "Shimon Bollinger"
+  ],
+  "auth": "Write me!",
+  "depends": [
+    "",
+    "",
+    "",
+    "Filetype::Magic",
+    "Digest::SHA1::Native",
+    "LWP::Simple"
+  ],
+  "build-depends": [],
+  "test-depends": [],
+  "provides": {
+    "App::APOTD": "lib/App/APOTD.rakumod"
+  },
+  "resources": [],
+  "license": "Perl Artistic",
+  "source-url": "Write me!"
+}
