@@ -1,26 +1,26 @@
 {
-  "name": "apotd",
-  "description": "Download today's Astronomy Picture of the Day",
-  "version": "0.1",
-  "perl": "6.d",
+  "auth": "<zef:deoac>",
   "authors": [
     "Shimon Bollinger"
   ],
-  "auth": "Write me!",
+  "build-depends": [
+  ],
   "depends": [
-    "",
-    "",
-    "",
-    "Filetype::Magic",
+    "CLI::Version",
     "Digest::SHA1::Native",
+    "Filetype::Magic",
     "LWP::Simple"
   ],
-  "build-depends": [],
-  "test-depends": [],
-  "provides": {
-    "App::APOTD": "lib/App/APOTD.rakumod"
-  },
-  "resources": [],
+  "description": "Download today's Astronomy Picture of the Day",
   "license": "Perl Artistic",
-  "source-url": "Write me!"
+  "name": "apotd",
+  "perl": "6.d",
+  "provides": {
+  },
+  "resources": [
+  ],
+  "source-url": "https://github.com/deoac/apotd.git",
+  "test-depends": [
+  ],
+  "version": "0.0.1"
 }
