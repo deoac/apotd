@@ -9,7 +9,7 @@ use v6.d;
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
 #      VERSION: 1.0
-#     REVISION: Last modified: Sat 25 Mar 2023 04:13:29 PM EDT
+#     REVISION: Last modified: Sat 15 Apr 2023 12:40:51 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -63,7 +63,7 @@ note "\n", DateTime.now    if $debug;
 
 my $html-source = try LWP::Simple.get: $APOTD-PAGE;
 
-die "Couldn't get from the $APOTD-PAGE.\n" ~
+mail-die "Couldn't get from the $APOTD-PAGE.\n" ~
     "Are you connected to the internet?\n" ~
     " $!"
         without $html-source;
@@ -108,7 +108,7 @@ if $*DISTRO.auth ~~ rx:s/ Apple Inc. / {
         say  "Successfully wrote the alt-text and "   ~
              "permanent link as a comment to the file."
     } else {
-        die "Couldn't write the alt-text to $path.\n",
+        mail-die "Couldn't write the alt-text to $path.\n",
             "exit code: {$result.exitcode}\n",
             "   stdout: {$result.out.slurp()}\n",
             "   stderr: {$result.err.slurp()}";
@@ -195,14 +195,15 @@ sub get-filename (Str $html-source --> List) {
     # There is only one <IMG SRC= ...> tag on the page.
     my $img-html = $html-source.lines.grep: /IMG \s+ SRC \= (.*) /;
     dd $img-html if $debug;
-    die "Couldn't find an image on the site.  It's probably a video today."
+    mail-die "Couldn't find an image on the site.  It's probably a video today."
         if $img-html eq $(().Seq); # This is what grep returns if it doesn't find anything.
 
 
     $img-html ~~ / <in-dbl-quotes> /;
     my Str $image-name = $/<in-dbl-quotes><quoted-string>.Str;
     dd $image-name if $debug;
-    die "Couldn't find an image on the site.  It's probably a video today."
+    mail-die "Weird. There's an HTML tag for an image, " ~
+        "but no source for the image!\n\t$img-html"
         without $image-name;
     my Str $image-ext = $image-name.IO.extension;
 
@@ -213,10 +214,10 @@ sub get-image (Str $image-name --> List) {
     my $url = "$WEBSITE/$image-name";
     dd $url if $debug;
     my $image = LWP::Simple.get($url);
+    mail-die "Couldn't download the image from the site.\n $!"
+        without $image;
     my $image-hash = sha1-hex($image);
     dd $image-hash if $debug;
-    die "Couldn't download the image from the site.\n $!"
-        without $image;
 
     return ($image, $image-hash);
 } # end of sub get-image (Str $image-name --> List)
@@ -243,7 +244,7 @@ sub die-if-image-exists (Str $filename, Str $image-hash) {
     for $dir.IO.dir -> $file {
         next FILE if file-type($file) !~~ /image/;
         if $image-hash eqv sha1-hex(slurp($file, :bin)) {
-            die "The image has already been saved as {$file.basename}";
+            mail-die "The image has already been saved as {$file.basename}";
         } # end of if sha1-hex(slurp($file, :bin))
     } # end of for $dir.IO.dir -> $file
 } # end of sub die-if-image-exists ($Str $filename, Str $image-hash)
@@ -280,6 +281,31 @@ sub save-image (Str $path, Buf $image --> Bool) {
 
     return $success;
 } # end of sub save-image (Str, Buf --> Bool)
+
+sub mail-die (Str $msg) is hidden-from-backtrace {
+    return unless $debug;
+
+    my $mail-msg = mail-me $msg;
+    die "$msg\n$mail-msg";
+} # end of sub ddd ($msg)
+
+#| #TODO Get this working
+sub mail-me (Str $body) {
+    my $to = 'deoac.bollinger@gmail.com';
+    my $subject = 'apotd error';
+
+    my $command = qq:to/END/;
+        echo '$body' | mail -s '$subject' $to
+    END
+
+    say $command;
+    my $mailed = shell $command;
+    my $retval = '';
+    $retval = "Couldn't mail, exit code {$mailed.exitcode}"
+        if $mailed.exitcode ≠ 0; # remember, 0 == success
+
+    return $retval;
+} # end of sub mail-me (Str $msg)
 
 CATCH {
     default {
