@@ -8,8 +8,8 @@ use v6.d;
 #  DESCRIPTION: Download the Astronomy Picture of the Day
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
-#      VERSION: 1.0
-#     REVISION: Last modified: Sat 15 Apr 2023 12:40:51 PM EDT
+#      VERSION: 0.0.1
+#     REVISION: Last modified: Sat 15 Apr 2023 01:43:03 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -54,267 +54,266 @@ my sub main (
     Bool :p(:$prepend-count)    = False,
     Bool :$debug        is copy = False,
 ) is export {
+    my $is-cronjob = !$*IN.t; # i.e. stdin not from a terminal
+    $debug ||= $is-cronjob;   # always log debug info when running as a cronjob.
 
-my $is-cronjob = !$*IN.t; # i.e. stdin not from a terminal
-$debug ||= $is-cronjob;   # always log debug info when running as a cronjob.
+    note "\n", DateTime.now if $debug;
 
-# the date will be written to the log file, if there is one.
-note "\n", DateTime.now    if $debug;
+    my $html-source = try LWP::Simple.get: $APOTD-PAGE;
 
-my $html-source = try LWP::Simple.get: $APOTD-PAGE;
+    mail-die "Couldn't get from the $APOTD-PAGE.\n" ~
+        "Are you connected to the internet?\n" ~
+        " $!"
+            without $html-source;
 
-mail-die "Couldn't get from the $APOTD-PAGE.\n" ~
-    "Are you connected to the internet?\n" ~
-    " $!"
-        without $html-source;
+    # First, extract the filename of the image from the page
+    my ($image-name, $image-ext) = get-filename $html-source;
 
-# First, extract the filename of the image from the page
-my ($image-name, $image-ext) = get-filename $html-source;
+    # Second, extract the actual image (usually a JPEG) from the site
+    my ($image, $image-hash) = get-image $image-name;
 
-# Second, extract the actual image (usually a JPEG) from the site
-my ($image, $image-hash) = get-image $image-name;
+    # If the user has not supplied a filename, take it from the image caption
+    $filename //=  make-filename $html-source;
 
-# If the user has not supplied a filename, take it from the image caption
-$filename //=  make-filename $html-source;
+    # Don't add images that have already been downloaded
+    die-if-image-exists $image-hash;
 
-# Don't add images that have already been downloaded
-die-if-image-exists $filename, $image-hash;
+    my Str $path;
+    if $prepend-count {
+        prepend-count $filename if $prepend-count;
+    } # end of if $prepend-count
+    $path = "$dir/$filename.$image-ext";
 
-my Str $path;
-if $prepend-count {
-    prepend-count $filename if $prepend-count;
-} # end of if $prepend-count
-$path = "$dir/$filename.$image-ext";
-
-dd $path if $debug;
-
-# ... aaaand save it!
-if my $success = save-image($path, $image) {
-    say "Successfully wrote $path";
-} else {
-    $success.throw;
-} # end of if save-image ($path, $image)
-
-# Now write the alt-text to the 'comment' section of a MacOS file.
-if $*DISTRO.auth ~~ rx:s/ Apple Inc. / {
-    my $alt-text = get-alt-text $html-source;
-    my $comment  = get-comment $alt-text;
-
-    # ...aaand write the comment into the comment box!
-    my Proc $result = write-comment $path, $comment;
-
-    # shell returns 0 on success.
-    if $result.exitcode == 0 {
-        say  "Successfully wrote the alt-text and "   ~
-             "permanent link as a comment to the file."
-    } else {
-        mail-die "Couldn't write the alt-text to $path.\n",
-            "exit code: {$result.exitcode}\n",
-            "   stdout: {$result.out.slurp()}\n",
-            "   stderr: {$result.err.slurp()}";
-    } # end of if $result.exitcode == 0
-} # end of if $*DISTRO.auth ~~ rx:s/ Apple Inc. /
-
-# ------------------- Program ends here ----------------------- #
-
-
-
-# ------------ Subroutine Definitions start here -------------- #
-#
-sub get-alt-text (Str $html-source --> Str) {
-    my @alt-text = gather for $html-source.lines  {
-        # The last line of the alt-text is "See explanation..."
-        # so we use ff^
-        take $_ if rx{ alt <equals-sign> } ff^
-                   rx{ <dbl-quote> $};
-    } # end of for $html-source.lines
-    my $alt-text = @alt-text.subst(rx{^ alt <equals-sign> <dbl-quote>})
-                            .subst("\n", ' ', :g); # don't need the line-breaks
-
-    if $alt-text.trim eq '' or
-       $alt-text.starts-with: 'See Explanation' {
-        $alt-text = '';
-        note "No alt-text for this image." if $debug;
-    } # end of if $alt-text.starts-with: 'See Explanation'|''
-
-    dd $alt-text if $debug;
-    return $alt-text;
-} # end of sub get-alt-text ($Str $html-source --> Str)
-
-sub get-comment (Str $alt-text --> Str) {
-    # Get the path to the permanent link to this image.
-    # astropix page names are of the form 'apYYMMDD.html'
-    my $html-page-name = DateTime.now( formatter =>
-        { sprintf 'ap%02d%02d%02d', .year % 100, .month, .day }
-    );
-
-    # Join the alt-text and the link into the comment.
-    # MacOS requires \r, not \n
-    my $comment = "$alt-text\r\r$WEBSITE/$html-page-name.html";
-    note "\n---------" if $debug;
-    dd $comment if $debug;
-
-    return $comment;
-} # end of sub get-comment (Str $alt-text --> Str)
-
-
-sub write-comment (Str $path, Str $comment
-                    --> Proc) {
-    my $path-encoded    = escape-special-chars $path;
-    my $comment-encoded = escape-special-chars $comment;
-    my $shell-cmd = Q:scalar:to/END/.subst("\n", ' ', :g);
-        osascript -e 'on run {f, c}'
-        -e 'tell app "Finder" to set comment of
-           (POSIX file f as alias) to c'
-        -e end file://$path-encoded
-            $comment-encoded
-    END
-
-    note "\n---------" if $debug;
-    dd $shell-cmd if $debug;
-
-    my Proc $result = shell($shell-cmd, :out, :err);
-    note "\n---------" if $debug;
-    dd $result if $debug;
-    note "\n---------" if $debug;
-    note $result.out.slurp(:close) if $debug;
-    note "\n---------" if $debug;
-    note $result.err.slurp(:close) if $debug;
-
-    return $result;
-} # end of sub write-comment (Str $path-encoded, Str $comment-encoded)
-
-# We need to escape the blank spaces because so that the command line
-# will interpret the path and comment as each being a single  argument
-sub escape-special-chars (Str $str is copy --> Str) {
-    $str .= subst: / <shell-special-chars> /, "\\" ~ *, :g;
-    return $str;
-} # end of sub escape-special-chars (Str $str is copy --> Str)
-
-sub get-filename (Str $html-source --> List) {
-    # There is only one <IMG SRC= ...> tag on the page.
-    my $img-html = $html-source.lines.grep: /IMG \s+ SRC \= (.*) /;
-    dd $img-html if $debug;
-    mail-die "Couldn't find an image on the site.  It's probably a video today."
-        if $img-html eq $(().Seq); # This is what grep returns if it doesn't find anything.
-
-
-    $img-html ~~ / <in-dbl-quotes> /;
-    my Str $image-name = $/<in-dbl-quotes><quoted-string>.Str;
-    dd $image-name if $debug;
-    mail-die "Weird. There's an HTML tag for an image, " ~
-        "but no source for the image!\n\t$img-html"
-        without $image-name;
-    my Str $image-ext = $image-name.IO.extension;
-
-    return ($image-name, $image-ext);
-} # end of sub get-filename (Str $html-source --> List)
-
-sub get-image (Str $image-name --> List) {
-    my $url = "$WEBSITE/$image-name";
-    dd $url if $debug;
-    my $image = LWP::Simple.get($url);
-    mail-die "Couldn't download the image from the site.\n $!"
-        without $image;
-    my $image-hash = sha1-hex($image);
-    dd $image-hash if $debug;
-
-    return ($image, $image-hash);
-} # end of sub get-image (Str $image-name --> List)
-
-sub make-filename (Str $html-source --> Str) {
-    # The caption is the first <b> ... </b> line.
-    # (Until they redesign the site...)
-    my Str $caption = $html-source.lines.grep(/\<b\>/).first;
-
-    # get rid of the HTML tags
-    $caption .= subst: rx{ \< <[b\/r]>+ \> },  :g;
-
-    # get rid of chars which might be problematic in a filename.
-    $caption .= subst: rx{ <filename-bad-chars> }, '★', :g;
-    $caption .= trim;
-    dd $caption if $debug;
-
-    return $caption;
-} # end of sub make-filename (Str $html-source --> Str)
-
-# Compare this file's SHA hash with the saved images
-sub die-if-image-exists (Str $filename, Str $image-hash) {
-    FILE:
-    for $dir.IO.dir -> $file {
-        next FILE if file-type($file) !~~ /image/;
-        if $image-hash eqv sha1-hex(slurp($file, :bin)) {
-            mail-die "The image has already been saved as {$file.basename}";
-        } # end of if sha1-hex(slurp($file, :bin))
-    } # end of for $dir.IO.dir -> $file
-} # end of sub die-if-image-exists ($Str $filename, Str $image-hash)
-
-# This sub modifies the $filename argument
-sub prepend-count (Str $filename is rw --> Str) {
-    # To increment the number, we need to know the last image saved
-    # An image name will be something like '0073_RockyRed7_DeepAI_960.jpg'
-    my @dir-listing = dir($dir);
-    my $most-recent-image =
-            @dir-listing
-        .grep({try file-type($_) ~~ /image/ })
-        .sort({ .IO.modified })
-        .reverse
-        .head
-        .basename with @dir-listing;
-
-    # increment the count (in this case to 0074)
-    my $count  = 0;
-    dd $most-recent-image if $debug;
-
-    # 'try'ing in case the most recent filename doesn't exist or
-    # doesn't begin with 4 digits. In which case, $count == 0
-    try $count = $most-recent-image.comb(4).first.join + 1;
-
-    $filename = sprintf "%04d-$filename", $count;
-} # end of sub prepend-count (Str $filename is copy --> Str)
-
-sub save-image (Str $path, Buf $image --> Bool) {
     dd $path if $debug;
-    mkdir $dir unless $dir.IO.e;
-    my $success = spurt $path, $image;
-    dd $success if $debug;
 
-    return $success;
-} # end of sub save-image (Str, Buf --> Bool)
+    # ... aaaand save it!
+    if my $success = save-image($path, $image) {
+        say "Successfully wrote $path";
+    } else {
+        $success.throw;
+    } # end of if save-image ($path, $image)
 
-sub mail-die (Str $msg) is hidden-from-backtrace {
-    return unless $debug;
+    # Now write the alt-text to the 'comment' section of a MacOS file.
+    if $*DISTRO.auth ~~ rx:s/ Apple Inc. / {
+        my $alt-text = get-alt-text $html-source;
+        my $comment  = get-comment $alt-text;
 
-    my $mail-msg = mail-me $msg;
-    die "$msg\n$mail-msg";
-} # end of sub ddd ($msg)
+        # ...aaand write the comment into the comment box!
+        my Proc $result = write-comment $path, $comment;
 
-#| #TODO Get this working
-sub mail-me (Str $body) {
-    my $to = 'deoac.bollinger@gmail.com';
-    my $subject = 'apotd error';
+        # shell returns 0 on success.
+        if $result.exitcode == 0 {
+            say  "Successfully wrote the alt-text and "   ~
+                 "permanent link as a comment to the file."
+        } else {
+            mail-die "Couldn't write the alt-text to $path.\n",
+                "exit code: {$result.exitcode}\n",
+                "   stdout: {$result.out.slurp()}\n",
+                "   stderr: {$result.err.slurp()}";
+        } # end of if $result.exitcode == 0
+    } # end of if $*DISTRO.auth ~~ rx:s/ Apple Inc. /
 
-    my $command = qq:to/END/;
-        echo '$body' | mail -s '$subject' $to
-    END
+    # ------------------- Program ends here ----------------------- #
 
-    say $command;
-    my $mailed = shell $command;
-    my $retval = '';
-    $retval = "Couldn't mail, exit code {$mailed.exitcode}"
-        if $mailed.exitcode ≠ 0; # remember, 0 == success
 
-    return $retval;
-} # end of sub mail-me (Str $msg)
 
-CATCH {
-    default {
-        $*ERR.say: .message;
-        $*ERR.say: .backtrace.nice if $debug;
-    }
-};
+    # ------------ Subroutine Definitions start here -------------- #
+    #
+    sub get-alt-text (Str $html-source --> Str) {
+        my @alt-text = gather for $html-source.lines  {
+            # The last line of the alt-text is "See explanation..."
+            # so we use ff^
+            take $_ if rx{ alt <equals-sign> } ff^
+                       rx{ <dbl-quote> $};
+        } # end of for $html-source.lines
+        my $alt-text = @alt-text.subst(rx{^ alt <equals-sign> <dbl-quote>})
+                                .subst("\n", ' ', :g); # don't need the line-breaks
 
-} # need these brackets so the CATCH block catches all Exceptions
+        if $alt-text.trim eq '' or
+           $alt-text.starts-with: 'See Explanation' {
+            $alt-text = '';
+            note "No alt-text for this image." if $debug;
+        } # end of if $alt-text.starts-with: 'See Explanation'|''
+
+        dd $alt-text if $debug;
+        return $alt-text;
+    } # end of sub get-alt-text ($Str $html-source --> Str)
+
+    sub get-comment (Str $alt-text --> Str) {
+        # Get the path to the permanent link to this image.
+        # astropix page names are of the form 'apYYMMDD.html'
+        my $html-page-name = DateTime.now( formatter =>
+            { sprintf 'ap%02d%02d%02d', .year % 100, .month, .day }
+        );
+
+        # Join the alt-text and the link into the comment.
+        # MacOS requires \r, not \n
+        my $comment = "$alt-text\r\r$WEBSITE/$html-page-name.html";
+        note "\n---------" if $debug;
+        dd $comment if $debug;
+
+        return $comment;
+    } # end of sub get-comment (Str $alt-text --> Str)
+
+
+    sub write-comment (Str $path, Str $comment
+                        --> Proc) {
+        my $path-encoded    = escape-special-chars $path;
+        my $comment-encoded = escape-special-chars $comment;
+        my $shell-cmd = Q:scalar:to/END/.subst("\n", ' ', :g);
+            osascript -e 'on run {f, c}'
+            -e 'tell app "Finder" to set comment of
+               (POSIX file f as alias) to c'
+            -e end file://$path-encoded
+                $comment-encoded
+        END
+
+        note "\n---------" if $debug;
+        dd $shell-cmd if $debug;
+
+        my Proc $result = shell($shell-cmd, :out, :err);
+        note "\n---------" if $debug;
+        dd $result if $debug;
+        note "\n---------" if $debug;
+        note $result.out.slurp(:close) if $debug;
+        note "\n---------" if $debug;
+        note $result.err.slurp(:close) if $debug;
+
+        return $result;
+    } # end of sub write-comment (Str $path-encoded, Str $comment-encoded)
+
+    # We need to escape the blank spaces because so that the command line
+    # will interpret the path and comment as each being a single  argument
+    sub escape-special-chars (Str $str is copy --> Str) {
+        $str .= subst: / <shell-special-chars> /, "\\" ~ *, :g;
+        return $str;
+    } # end of sub escape-special-chars (Str $str is copy --> Str)
+
+    sub get-filename (Str $html-source --> List) {
+        # There is only one <IMG SRC= ...> tag on the page.
+        my $img-html = $html-source.lines.grep: /IMG \s+ SRC \= (.*) /;
+        dd $img-html if $debug;
+        mail-die "Couldn't find an image on the site.  It's probably a video today."
+            if $img-html eq $(().Seq); # This is what grep returns if it doesn't find anything.
+
+
+        $img-html ~~ / <in-dbl-quotes> /;
+        my Str $image-name = $/<in-dbl-quotes><quoted-string>.Str;
+        dd $image-name if $debug;
+        mail-die "Weird. There's an HTML tag for an image, " ~
+            "but no source for the image!\n\t$img-html"
+            without $image-name;
+        my Str $image-ext = $image-name.IO.extension;
+
+        return ($image-name, $image-ext);
+    } # end of sub get-filename (Str $html-source --> List)
+
+    sub get-image (Str $image-name --> List) {
+        my $url = "$WEBSITE/$image-name";
+        dd $url if $debug;
+        my $image = LWP::Simple.get($url);
+        mail-die "Couldn't download the image from the site.\n $!"
+            without $image;
+        my $image-hash = sha1-hex($image);
+        dd $image-hash if $debug;
+
+        return ($image, $image-hash);
+    } # end of sub get-image (Str $image-name --> List)
+
+    sub make-filename (Str $html-source --> Str) {
+        # The caption is the first <b> ... </b> line.
+        # (Until they redesign the site...)
+        my Str $caption = $html-source.lines.grep(/\<b\>/).first;
+
+        # get rid of the HTML tags
+        $caption .= subst: rx{ \< <[b\/r]>+ \> },  :g;
+
+        # get rid of chars which might be problematic in a filename.
+        $caption .= subst: rx{ <filename-bad-chars> }, '★', :g;
+        $caption .= trim;
+        dd $caption if $debug;
+
+        return $caption;
+    } # end of sub make-filename (Str $html-source --> Str)
+
+    # Compare this file's SHA hash with the saved images
+    sub die-if-image-exists (Str $image-hash) {
+        FILE:
+        for $dir.IO.dir -> $file {
+            next FILE if file-type($file) !~~ /image/;
+            if $image-hash eqv sha1-hex(slurp($file, :bin)) {
+                mail-die "The image has already been saved as {$file.basename}";
+            } # end of if sha1-hex(slurp($file, :bin))
+        } # end of for $dir.IO.dir -> $file
+    } # end of sub die-if-image-exists (Str $image-hash)
+
+    # This sub modifies the $filename argument
+    sub prepend-count (Str $filename is rw --> Str) {
+        # To increment the number, we need to know the last image saved
+        # An image name will be something like '0073_RockyRed7_DeepAI_960.jpg'
+        my @dir-listing = dir($dir);
+        my $most-recent-image =
+                @dir-listing
+            .grep({try file-type($_) ~~ /image/ })
+            .sort({ .IO.modified })
+            .reverse
+            .head
+            .basename with @dir-listing;
+
+        # increment the count (in this case to 0074)
+        my $count  = 0;
+        dd $most-recent-image if $debug;
+
+        # 'try'ing in case the most recent filename doesn't exist or
+        # doesn't begin with 4 digits. In which case, $count == 0
+        try $count = $most-recent-image.comb(4).first.join + 1;
+
+        $filename = sprintf "%04d-$filename", $count;
+    } # end of sub prepend-count (Str $filename is copy --> Str)
+
+    sub save-image (Str $path, Buf $image --> Bool) {
+        dd $path if $debug;
+        mkdir $dir unless $dir.IO.e;
+        my $success = spurt $path, $image;
+        dd $success if $debug;
+
+        return $success;
+    } # end of sub save-image (Str, Buf --> Bool)
+
+    sub mail-die (Str $msg) is hidden-from-backtrace {
+        my $mail-error = mail-me $msg;
+        $msg ~= "\n$mail-error" if $mail-error.chars > 0;
+        die $msg;
+    } # end of sub mail-die ($msg)
+
+    #| #TODO Get this working
+    sub mail-me (Str $body) {
+        my $to = 'deoac.bollinger@gmail.com';
+        my $subject = 'apotd error';
+
+        my $command = qq:to/END/;
+            echo '$body' | mail -s '$subject' $to
+        END
+
+        dd $command if $debug;
+        my $mailed = shell $command;
+        my $retval = '';
+        $retval = "Couldn't mail, exit code {$mailed.exitcode}"
+            if $mailed.exitcode ≠ 0; # remember, 0 == success
+
+        return $retval;
+    } # end of sub mail-me (Str $msg)
+
+    CATCH {
+        default {
+            # Don't normally show the backtrace.
+            $*ERR.say: .message;
+            $*ERR.say: .backtrace.nice if $debug;
+        }
+    };
+
+    } # end of sub main (...) is export
+ 
 
 =begin pod
 
@@ -325,7 +324,7 @@ apotd - Download today's Astronomy Picture of the Day
 
 =head1 VERSION
 
-This documentation refers to C<apotd> version 1.0
+This documentation refers to C<apotd> version 0.0.1
 
 
 =head1 USAGE
