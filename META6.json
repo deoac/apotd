@@ -19,6 +19,9 @@
   "resources": [
   ],
   "source-url": "https://github.com/deoac/apotd.git",
+  "support": {
+    "license": "http://www.perlfoundation.org/artistic_license_2_0"
+  },
   "test-depends": [
   ],
   "version": "1.0.0"
