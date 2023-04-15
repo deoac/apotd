@@ -6,7 +6,6 @@
   "build-depends": [
   ],
   "depends": [
-    "CLI::Version",
     "Digest::SHA1::Native",
     "Filetype::Magic",
     "LWP::Simple"
