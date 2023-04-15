@@ -9,7 +9,7 @@ use v6.d;
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
 #      VERSION: 1.0.1
-#     REVISION: Last modified: Sat 15 Apr 2023 04:31:13 PM EDT
+#     REVISION: Last modified: Sat 15 Apr 2023 05:13:02 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -460,7 +460,7 @@ Source can be located at: https://github.com/deoac/apotd.git
 
 Comments, suggestions, and pull requests are welcome.
 
-=head1 LICENCE AND COPYRIGHT
+=head1 LICENSE AND COPYRIGHT
 
 Copyright 2023 Shimon Bollinger
 
