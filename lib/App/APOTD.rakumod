@@ -8,8 +8,8 @@ use v6.d;
 #  DESCRIPTION: Download the Astronomy Picture of the Day
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
-#      VERSION: 1.0.0
-#     REVISION: Last modified: Sat 15 Apr 2023 04:12:02 PM EDT
+#      VERSION: 1.0.1
+#     REVISION: Last modified: Sat 15 Apr 2023 04:31:13 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -288,7 +288,7 @@ my sub main (
 
     #| #TODO Get this working
     sub mail-me (Str $body) {
-        my $to = 'deoac.bollinger@gmail.com';
+        my $to = 'deoac.shimon@gmail.com';
         my $subject = 'apotd error';
 
         my $command = qq:to/END/;
@@ -332,7 +332,7 @@ my sub main (
 
 =head1 VERSION
 
-This documentation refers to C<apotd> version 1.0.0
+This documentation refers to C<apotd> version 1.0.1
 
 
 =head1 USAGE
