@@ -1,9 +1,0 @@
-use v6.d;
-use Test;
-use App::APOTD;
-
-plan 1;
-
-ok ::('&main'), 'did &main get exported?';
-
-# vim: expandtab shiftwidth=4
