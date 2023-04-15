@@ -1,9 +1,12 @@
 #!/usr/bin/env raku
 use v6.d;
 
+my proto sub MAIN(|) {*}
+use CLI::Version $?DISTRIBUTION, &MAIN;
+
 use App::APOTD;
 
-my sub MAIN (
+multi sub MAIN (
         #| What directory should the image be saved to?
     Str  :d(:$dir)      is copy = $APOTD-FOLDER,
         #| What filename should it be saved under? [default: the caption of the image]
