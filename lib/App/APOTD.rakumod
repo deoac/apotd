@@ -9,7 +9,7 @@ use v6.d;
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
 #      VERSION: 0.0.1
-#     REVISION: Last modified: Sat 15 Apr 2023 01:43:03 PM EDT
+#     REVISION: Last modified: Sat 15 Apr 2023 01:52:21 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -415,9 +415,10 @@ The image has already been saved as R<filename>.
 
 =head1 DEPENDENCIES
 
+    CLI::Version
+    LWP::Simple;
     Filetype::Magic;
     Digest::SHA1::Native;
-    LWP::Simple;
 
 =head1 ASSUMPTIONS
 
@@ -431,14 +432,19 @@ And that tag has an C<alt=> attribute.
 =head1 BUGS AND LIMITATIONS
 
 There are no known bugs in this module.
-Please report problems to Shimon Bollinger (<deoac.shimon@gmail.com>)
-Patches are welcome.
+
+Please report problems to Shimon Bollinger <deoac.shimon@gmail.com>
 
 =head1 AUTHOR
 
-Shimon Bollinger  (<deoac.shimon@gmail.com>)
+Shimon Bollinger  <deoac.shimon@gmail.com>
+
+Source can be located at: https://github.com/deoac/apotd.git
+Comments, suggestions, and pull requests are welcome.
 
 =head1 LICENCE AND COPYRIGHT
+
+Copyright 2023 Shimon Bollinger
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.

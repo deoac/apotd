@@ -6,7 +6,7 @@ apotd - Download today's Astronomy Picture of the Day
 VERSION
 =======
 
-This documentation refers to `apotd` version 1.0
+This documentation refers to `apotd` version 0.0.1
 
 USAGE
 =====
@@ -94,9 +94,10 @@ The image has already been saved as <var>filename</var>.
 DEPENDENCIES
 ============
 
+    CLI::Version
+    LWP::Simple;
     Filetype::Magic;
     Digest::SHA1::Native;
-    LWP::Simple;
 
 ASSUMPTIONS
 ===========
@@ -110,15 +111,21 @@ And that tag has an `alt=` attribute.
 BUGS AND LIMITATIONS
 ====================
 
-There are no known bugs in this module. Please report problems to Shimon Bollinger (<deoac.shimon@gmail.com>) Patches are welcome.
+There are no known bugs in this module.
+
+Please report problems to Shimon Bollinger <deoac.shimon@gmail.com>
 
 AUTHOR
 ======
 
-Shimon Bollinger (<deoac.shimon@gmail.com>)
+Shimon Bollinger <deoac.shimon@gmail.com>
+
+Source can be located at: https://github.com/deoac/apotd.git Comments, suggestions, and pull requests are welcome.
 
 LICENCE AND COPYRIGHT
 =====================
+
+Copyright 2023 Shimon Bollinger
 
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself. See [perlartistic](http://perldoc.perl.org/perlartistic.html).
 
