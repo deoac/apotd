@@ -9,7 +9,7 @@ use v6.d;
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
 #      VERSION: 0.0.1
-#     REVISION: Last modified: Sat 15 Apr 2023 01:52:21 PM EDT
+#     REVISION: Last modified: Sat 15 Apr 2023 03:57:17 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -317,10 +317,18 @@ my sub main (
 
 =begin pod
 
-=head1 NAME
+=begin comment
+    When not using Pod::To::Markdown2 or Pod::To::HTML2, use these instead
+    of =head1 NAME
 
-apotd - Download today's Astronomy Picture of the Day
+    =TITLE Astronomy Picture of the Day
 
+    =SUBTITLE Download Today's Astronomy Picture of the Day
+=end comment
+
+    =head1 NAME 
+
+    apotd - Download Today's Astronomy Picture of the Day
 
 =head1 VERSION
 
@@ -413,6 +421,15 @@ Couldn't find an image on the site.  It's probably a video today.
 
 The image has already been saved as R<filename>.
 
+Couldn't write the alt-text to R<path>.
+
+=head2 Success
+
+Successfully wrote Pictures/apotd/
+2483-Dark Nebulae and Star Formation in Taurus.jpg
+
+Successfully wrote the alt-text and permanent link as a comment to the file.
+
 =head1 DEPENDENCIES
 
     CLI::Version
@@ -440,6 +457,7 @@ Please report problems to Shimon Bollinger <deoac.shimon@gmail.com>
 Shimon Bollinger  <deoac.shimon@gmail.com>
 
 Source can be located at: https://github.com/deoac/apotd.git
+
 Comments, suggestions, and pull requests are welcome.
 
 =head1 LICENCE AND COPYRIGHT
