@@ -1,12 +1,12 @@
 # Astronomy Picture of the Day
->Download today's Astronomy Picture of the Day
+>Download Today's Astronomy Picture of the Day
 
 
 ## Table of Contents
 [VERSION](#version)  
-[USAGE](#usage)  
-[OPTIONS](#options)  
+[SYNOPSIS](#synopsis)  
 [DESCRIPTION](#description)  
+[OPTIONS](#options)  
 [DIAGNOSTICS](#diagnostics)  
 [General problems](#general-problems)  
 [Problems specific to apotd:](#problems-specific-to-apotd)  
@@ -15,13 +15,13 @@
 [ASSUMPTIONS](#assumptions)  
 [BUGS AND LIMITATIONS](#bugs-and-limitations)  
 [AUTHOR](#author)  
-[LICENCE AND COPYRIGHT](#licence-and-copyright)  
+[LICENSE AND COPYRIGHT](#license-and-copyright)  
 
 ----
 # VERSION
-This documentation refers to `apotd` version 0.0.1
+This documentation refers to `apotd` version 1.0.2
 
-# USAGE
+# SYNOPSIS
 Usage:
 
 ```
@@ -35,22 +35,6 @@ To downloand and save using the default behavior, simply:
 
 ```
 $ apotd
-
-```
-# OPTIONS
-```
-# Save to directory "foo"
-$ apotd --dir=foo
-$ apotd    -d=foo
-
-# Save with the filename "bar"
-# The image's extension, e.g. ".jpg", will be automatically added.
-$ apotd --file=bar
-$ apotd     -f=bar
-
-# Prepend a count to the filename
-$ apotd --prepend-count
-$ apotd  -p
 
 ```
 # DESCRIPTION
@@ -84,33 +68,48 @@ a bright region of star formation.
 
 https://apod.nasa.gov/apod/ap230321.html
 ```
+# OPTIONS
+```
+# Save to directory "foo"
+$ apotd --dir=foo
+$ apotd    -d=foo
+
+# Save with the filename "bar"
+# The image's extension, e.g. ".jpg", will be automatically added.
+$ apotd --file=bar
+$ apotd     -f=bar
+
+# Prepend a count to the filename
+$ apotd --prepend-count
+$ apotd  -p
+
+```
 # DIAGNOSTICS
-## General problems
-Failed to get the directory contents of "> \{\{\{ contents }}}
+General problems
+----------------
 
-: Failed to open dir: No such file or directory
+Failed to get the directory contents of <var>directory</var>: Failed to open dir: No such file or directory
 
-Failed to create directory "> \{\{\{ contents }}}
-
-: Failed to mkdir: No such file or directory
+Failed to create directory <var>directory</var>: Failed to mkdir: No such file or directory
 
 Failed to resolve host name 'apod.nasa.gov'
 
-## Problems specific to `apotd`:
+Problems specific to `apotd`:
+-----------------------------
+
 Couldn't find an image on the site. It's probably a video today.
 
-The image has already been saved as "> \{\{\{ contents }}}
+The image has already been saved as <var>filename</var>.
 
-.
+Couldn't write the alt-text to <var>path</var>.
 
-Couldn't write the alt-text to "> \{\{\{ contents }}}
+Success
+-------
 
-.
-
-## Success
 Successfully wrote Pictures/apotd/ 2483-Dark Nebulae and Star Formation in Taurus.jpg
 
 Successfully wrote the alt-text and permanent link as a comment to the file.
+
 
 # DEPENDENCIES
 ```
@@ -138,18 +137,10 @@ Source can be located at: https://github.com/deoac/apotd.git
 
 Comments, suggestions, and pull requests are welcome.
 
-# LICENCE AND COPYRIGHT
+# LICENSE AND COPYRIGHT
 Copyright 2023 Shimon Bollinger
 
 This module is free software; you can redistribute it and/or modify it under the same terms as Perl itself. See [perlartistic](http://perldoc.perl.org/perlartistic.html).
 
 This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
-
-
-name	___top
-
-
-
-----
-Rendered from  at 2023-04-15T19:47:51Z

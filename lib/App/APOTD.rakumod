@@ -8,8 +8,8 @@ use v6.d;
 #  DESCRIPTION: Download the Astronomy Picture of the Day
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
-#      VERSION: 1.0.1
-#     REVISION: Last modified: Sat 15 Apr 2023 05:13:02 PM EDT
+#      VERSION: 1.0.2
+#     REVISION: Last modified: Sun 16 Apr 2023 04:32:26 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
@@ -46,11 +46,11 @@ END
 } # end of sub USAGE
 
 my sub main (
-        #| What directory should the image be saved to?
+        # What directory should the image be saved to?
     Str  :d(:$dir)      is copy = $APOTD-FOLDER,
-        #| What filename should it be saved under? [default: the caption of the image]
+        # What filename should it be saved under? [default: the caption of the image]
     Str  :f(:$filename) is copy,
-        #| Add a count to the start of the filename.
+        # Add a count to the start of the filename.
     Bool :p(:$prepend-count)    = False,
     Bool :$debug        is copy = False,
 ) is export {
@@ -286,7 +286,7 @@ my sub main (
         die $msg;
     } # end of sub mail-die ($msg)
 
-    #| #TODO Get this working
+    #TODO Get this working
     sub mail-me (Str $body) {
         my $to = 'deoac.shimon@gmail.com';
         my $subject = 'apotd error';
@@ -318,24 +318,31 @@ my sub main (
 =begin pod
 
 =begin comment
-    When not using Pod::To::Markdown2 or Pod::To::HTML2, use these instead
-    of =head1 NAME
-
-    =TITLE Astronomy Picture of the Day
-
-    =SUBTITLE Download Today's Astronomy Picture of the Day
+#    When not using Pod::To::Markdown2 or Pod::To::HTML2, use these instead
+#    of =head1 NAME
 =end comment
+
+=TITLE Astronomy Picture of the Day
+
+=SUBTITLE Download Today's Astronomy Picture of the Day
+
+=begin comment
+
+#    When not using Pod::To::Markdown2 or Pod::To::HTML2, use these instead
+#    of =TITLE and =SUBTITLE
 
     =head1 NAME 
 
     apotd - Download Today's Astronomy Picture of the Day
 
+=end comment
+
 =head1 VERSION
 
-This documentation refers to C<apotd> version 1.0.1
+This documentation refers to C<apotd> version 1.0.2
 
 
-=head1 USAGE
+=head1 SYNOPSIS
 
 Usage:
 
@@ -351,23 +358,6 @@ To downloand and save using the default behavior, simply:
 $ apotd
 =end code
 
-
-=head1 OPTIONS
-
-=begin code :lang<bash>
-# Save to directory "foo"
-$ apotd --dir=foo
-$ apotd    -d=foo
-
-# Save with the filename "bar"
-# The image's extension, e.g. ".jpg", will be automatically added.
-$ apotd --file=bar
-$ apotd     -f=bar
-
-# Prepend a count to the filename
-$ apotd --prepend-count
-$ apotd  -p
-=end code
 
 =head1 DESCRIPTION
 
@@ -402,6 +392,23 @@ file's comment. e.g.
     a bright region of star formation.
 
     https://apod.nasa.gov/apod/ap230321.html
+
+=head1 OPTIONS
+
+=begin code :lang<bash>
+# Save to directory "foo"
+$ apotd --dir=foo
+$ apotd    -d=foo
+
+# Save with the filename "bar"
+# The image's extension, e.g. ".jpg", will be automatically added.
+$ apotd --file=bar
+$ apotd     -f=bar
+
+# Prepend a count to the filename
+$ apotd --prepend-count
+$ apotd  -p
+=end code
 
 =head1 DIAGNOSTICS
 
