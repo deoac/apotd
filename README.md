@@ -1,5 +1,15 @@
 [![Actions Status](https://github.com/deoac/apotd/actions/workflows/test.yml/badge.svg)](https://github.com/deoac/apotd/actions)
 
+### sub print-version
+
+```raku
+sub print-version(
+    $verbose
+) returns Mu
+```
+
+Copied from <zef:lizmat>'s CLI::Version module. For some reason, I can't get it to work here. $?DISTRIBUTION.meta does not show data from my META6.json.
+
 TITLE
 =====
 
@@ -110,7 +120,6 @@ Successfully wrote the alt-text and permanent link as a comment to the file.
 DEPENDENCIES
 ============
 
-    CLI::Version
     LWP::Simple;
     Filetype::Magic;
     Digest::SHA1::Native;
