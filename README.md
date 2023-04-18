@@ -23,7 +23,7 @@ Download Today's Astronomy Picture of the Day
 VERSION
 =======
 
-This documentation refers to `apotd` version 1.0.2
+This documentation refers to `apotd` version 1.0.3
 
 SYNOPSIS
 ========

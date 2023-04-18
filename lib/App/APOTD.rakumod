@@ -8,15 +8,15 @@ use v6.d;
 #  DESCRIPTION: Download the Astronomy Picture of the Day
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
-#      VERSION: 1.0.2
-#     REVISION: Last modified: Mon 17 Apr 2023 10:09:12 PM EDT
+#      VERSION: 1.0.3
+#     REVISION: Last modified: Mon 17 Apr 2023 10:22:44 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
 use Digest::SHA1::Native;
 use LWP::Simple;
 
-our $VERSION is export = v1.0.2;
+our $VERSION is export = v1.0.3;
 
 constant $APOTD-PAGE   = "https://apod.nasa.gov/apod/astropix.html";
 constant $WEBSITE      = $APOTD-PAGE.IO.dirname;
@@ -326,7 +326,6 @@ my sub main (
     } # end of sub main (...) is export
  
 
-my $version = $VERSION;
 =begin pod
 
 =begin comment
@@ -351,7 +350,7 @@ my $version = $VERSION;
 
 =head1 VERSION
 
-This documentation refers to C<apotd> version 1.0.2
+This documentation refers to C<apotd> version 1.0.3
 
 
 =head1 SYNOPSIS
