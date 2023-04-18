@@ -2,5 +2,8 @@ Revision history for App-APOTD
 
 {{$NEXT}}
 
+1.0.3  2023-04-17T22:29:59-04:00
+    - Added --version as an option
+
 1.0.2  2023-04-16T16:44:49-04:00
     - Initial version
