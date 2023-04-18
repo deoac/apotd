@@ -1,10 +1,24 @@
 #!/usr/bin/env raku
 use v6.d;
 
-use CLI::Version $?DISTRIBUTION, proto sub MAIN(|) {*}  
-
-
 use App::APOTD;
+
+sub USAGE {
+    say q:to/END/;
+    Usage:
+      apotd [-v|-V|--version] [--verbose]
+      apotd [-d|--dir=<Str>] [-f|--filename=<Str>] [-p|--prepend-count]
+
+        -d|--dir=<Str>         What directory should the image be saved to? [default: '$*HOME/Pictures/apotd']
+        -f|--filename=<Str>    What filename should it be saved under? [default: the caption of the image]
+        -p|--prepend-count     Add a count to the start of the filename. [default: False]
+    END
+} # end of sub USAGE
+
+multi sub MAIN (Bool :v(:V(:$version)), Bool :$verbose = False)
+  is hidden-from-USAGE {
+    print-version($verbose);
+} # end of multi sub MAIN (Str :v(:V(:$version)), :$verbose = False)
 
 multi sub MAIN (
         #| What directory should the image be saved to?
@@ -14,8 +28,7 @@ multi sub MAIN (
         #| Add a count to the start of the filename.
     Bool :p(:$prepend-count)    = False,
     Bool :$debug        is copy = False,
-) {
-    dd $?DISTRIBUTION;
+) is hidden-from-USAGE {
     main(:$dir, :$filename, :$prepend-count, :$debug);
 }
 

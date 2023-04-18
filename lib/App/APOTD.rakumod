@@ -9,12 +9,14 @@ use v6.d;
 #
 #       AUTHOR: <Shimon Bollinger>  (<deoac.bollinger@gmail.com>)
 #      VERSION: 1.0.2
-#     REVISION: Last modified: Sun 16 Apr 2023 04:32:26 PM EDT
+#     REVISION: Last modified: Mon 17 Apr 2023 10:09:12 PM EDT
 #===============================================================================
 
 use Filetype::Magic;
 use Digest::SHA1::Native;
 use LWP::Simple;
+
+our $VERSION is export = v1.0.2;
 
 constant $APOTD-PAGE   = "https://apod.nasa.gov/apod/astropix.html";
 constant $WEBSITE      = $APOTD-PAGE.IO.dirname;
@@ -34,16 +36,25 @@ my regex in-dbl-quotes       {
                                 <dbl-quote>
                              }
 
-sub USAGE {
-say q:to/END/;
-Usage:
-
-    -d|--dir=<Str>         What directory should the image be saved to? [default: '$*HOME/Pictures/apotd']
-    -f|--filename=<Str>    What filename should it be saved under? [default: the caption of the image]
-    -p|--prepend-count     Add a count to the start of the filename. [default: False]
-END
-
-} # end of sub USAGE
+#| Copied from <zef:lizmat>'s CLI::Version module.
+#| For some reason, I can't get it to work here.
+#| $?DISTRIBUTION.meta does not show data from my META6.json.
+sub print-version ($verbose) is export {
+    my $compiler = Compiler.new;
+    say   'apotd - '
+        ~ ($verbose ?? "Download Today's Astronomy Picture of the Day" ~ ".\nP" !! 'p')
+        ~ "rovided by App::APOTD version $VERSION, running "
+        ~ $*RAKU.name
+        ~ ' '
+        ~ $*RAKU.version
+        ~ ' with '
+        ~ $compiler.name.tc
+        ~ ' '
+        ~ $compiler.version.Str.subst(/ '.' g .+/)
+        ~ '.'
+    ;
+    exit;
+} # end of sub print-version ($version, $verbose)
 
 my sub main (
         # What directory should the image be saved to?
@@ -315,6 +326,7 @@ my sub main (
     } # end of sub main (...) is export
  
 
+my $version = $VERSION;
 =begin pod
 
 =begin comment
@@ -439,7 +451,6 @@ Successfully wrote the alt-text and permanent link as a comment to the file.
 
 =head1 DEPENDENCIES
 
-    CLI::Version
     LWP::Simple;
     Filetype::Magic;
     Digest::SHA1::Native;
